@@ -1,0 +1,20 @@
+---
+application:
+  name: "webproxy"
+  project: "webproxy"
+  organization: "QoveryCommunity"
+  storage:
+  - name: "data"
+    size: "10"
+    type: "ssd"
+    mount_point: "/mnt/data"
+databases:
+- type: "MYSQL"
+  name: "db-mysql"
+  version: "5.7"
+routers:
+- name: "main-webproxy"
+  routes:
+  - application_name: "webproxy"
+    paths:
+    - "/*"
