@@ -1,11 +1,11 @@
 ---
 application:
   name: "webproxy"
-  project: "zhu"
+  project: "zhujq"
   organization: "QoveryCommunity"
   storage:
   - name: "data"
-    size: "500"
+    size: "750"
     type: "hdd"
     mount_point: "/mnt/data"
 routers:
