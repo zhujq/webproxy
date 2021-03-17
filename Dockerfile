@@ -10,7 +10,7 @@ FROM ubuntu:latest
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
-  && apt-get install -y curl openssh-server zip unzip net-tools inetutils-ping iproute2 tcpdump vim \
+  && apt-get install -y curl openssh-server zip unzip net-tools inetutils-ping iproute2 tcpdump vim mysql-client redis-tools\
   && mkdir -p /var/run/sshd \
   && echo 'root:root@1234' |chpasswd && sed -ri 's/^#?PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config \
   && sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config && mkdir /root/.ssh \
@@ -20,4 +20,5 @@ ADD . /
 WORKDIR /
 COPY --from=builder /server .
 CMD ["/bin/bash", "run.sh"]
+
 EXPOSE 8080
