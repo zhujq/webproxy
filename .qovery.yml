@@ -5,8 +5,8 @@ application:
   organization: "QoveryCommunity"
   storage:
   - name: "data"
-    size: "750"
-    type: "hdd"
+    size: "10"
+    type: "ssd"
     mount_point: "/mnt/data"
 routers:
 - name: "main-webproxy"
