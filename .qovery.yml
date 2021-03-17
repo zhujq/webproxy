@@ -1,20 +1,18 @@
 ---
 application:
-  name: "webproxy"
-  project: "webproxy"
+  name: "ubproxy"
+  project: "ub"
   organization: "QoveryCommunity"
-  storage:
-  - name: "data"
-    size: "10"
-    type: "ssd"
-    mount_point: "/mnt/data"
 databases:
 - type: "MYSQL"
-  name: "db-mysql"
-  version: "5.7"
+  name: "wechat-mysql"
+  version: "8.0"
+- type: "REDIS"
+  name: "wechat-redis"
+  version: "8.0"
 routers:
-- name: "main-webproxy"
+- name: "main-ubproxy"
   routes:
-  - application_name: "webproxy"
+  - application_name: "ubproxy"
     paths:
     - "/*"
