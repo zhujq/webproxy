@@ -20,3 +20,5 @@ ADD . /
 WORKDIR /
 COPY --from=builder /server .
 CMD ["/bin/bash", "run.sh"]
+
+EXPOSE 8080
