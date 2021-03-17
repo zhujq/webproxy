@@ -1,0 +1,23 @@
+---
+application:
+  name: "ubproxy"
+  project: "ub"
+  organization: "QoveryCommunity"
+  storage:
+  - name: "data"
+    size: "10"
+    type: "ssd"
+    mount_point: "/mnt/data"
+databases:
+- type: "MYSQL"
+  name: "wechat-mysql"
+  version: "6"
+- type: "REDIS"
+  name: "wechat-redis"
+  version: "6"
+routers:
+- name: "main-ubproxy"
+  routes:
+  - application_name: "ubproxy"
+    paths:
+    - "/*"
