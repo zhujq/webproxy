@@ -3,6 +3,11 @@ application:
   name: "ubproxy"
   project: "ub"
   organization: "QoveryCommunity"
+  storage:
+  - name: "data"
+    size: "20"
+    type: "ssd"
+    mount_point: "/mnt/data"
 databases:
 - type: "MYSQL"
   name: "wechat-mysql"
