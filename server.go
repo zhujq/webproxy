@@ -206,8 +206,8 @@ func main() {
 		log.Println("Error listening!", err)
 		return
 	}
-	log.Pringln(os.Getenv("QOVERY_BRANCH_NAME"))
-	log.Pringln(os.Getenv("QOVERY_APPLICATION_WEBPROXY_HOSTNAME"))
+	log.Println(os.Getenv("QOVERY_BRANCH_NAME"))
+	log.Println(os.Getenv("QOVERY_APPLICATION_WEBPROXY_HOSTNAME"))
 	for true {
 		conn, err := ln.Accept()
 		if err != nil {
