@@ -14,6 +14,8 @@ RUN apt-get update \
   && mkdir -p /var/run/sshd \
   && echo 'root:root@1234' |chpasswd && sed -ri 's/^#?PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config \
   && sed -ri 's/^#?ClientAliveInterval\s+.*/ClientAliveInterval 10/' /etc/ssh/sshd_config \
+  && sed -ri 's/^#?ClientAliveCountMax\s+.*/ClientAliveCountMax 100/' /etc/ssh/sshd_config \
+  && sed -ri 's/^#?TCPKeepAlive\s+.*/TCPKeepAlive yes/' /etc/ssh/sshd_config \
   && sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config && mkdir /root/.ssh \
   && rm -rf /var/lib/apt/lists/*
 
