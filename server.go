@@ -117,6 +117,7 @@ func handleConnection(clientConn net.Conn) {
 			fmt.Fprintf(clientConn, "Connection: Upgrade\r\n")
 			fmt.Fprintf(clientConn, "Content-Type: application/octet-stream\r\n")
 			fmt.Fprintf(clientConn, "Connection: keep-alive\r\n")
+			fmt.Fprintf(clientConn, "Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n")
 			fmt.Fprintf(clientConn, "Content-Length: 999999\r\n\r\n")
 
 			wait := make(chan bool)
@@ -173,6 +174,7 @@ func handleConnection(clientConn net.Conn) {
             fmt.Fprintf(clientConn, "Connection: Upgrade\r\n")
 			fmt.Fprintf(clientConn, "Content-Type: application/octet-stream\r\n")
 			fmt.Fprintf(clientConn, "Connection: keep-alive\r\n")
+			fmt.Fprintf(clientConn, "Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n")
 			fmt.Fprintf(clientConn, "Content-Length: 999999\r\n\r\n")
 			wait := make(chan bool)
 
