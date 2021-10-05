@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"runtime/debug"
+	"strings"
 //	"os"
 )
 
@@ -154,14 +155,17 @@ func handleConnection(clientConn net.Conn) {
 			}
 
 			log.Println(line)
-			log.Println(len(line))
-			log.Println(line[:10])
 
-			if len(line) > 10 && line[:10] == "Clientid: " {
+			if strings.HasPrefix(line ,"Clientid"){
 				resolvedId = line[10:30]
 				log.Println(resolvedId)
 			}
-
+	/*		if len(line) > 10 && line[:10] == "Clientid: " {
+				resolvedId = line[10:30]
+				log.Println(resolvedId)
+			}
+    */
+			
 			if line == "\r\n" {
 				break
 			}
