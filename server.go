@@ -84,7 +84,7 @@ func handleConnection(clientConn net.Conn) {
 
 	line, err := reader.ReadString('\n')
 	if err != nil {
-		// log.Println("Failed to read first line", err)
+		log.Println("Failed to read first line", err)
 		return
 	}
 	if line == "GET /listen HTTP/1.1\r\n" {
@@ -92,9 +92,10 @@ func handleConnection(clientConn net.Conn) {
 		resolvedId := ""
 		for line, err = reader.ReadString('\n'); true; line, err = reader.ReadString('\n') {
 			if err != nil {
-				// log.Println("Failed to read following lines", err)
+				log.Println("Failed to read following lines", err)
 				return
 			}
+			log.Println(line)
 
 			if len(line) > 10 && line[:10] == "Clientid: " {
 				resolvedId = line[10:30]
@@ -106,7 +107,7 @@ func handleConnection(clientConn net.Conn) {
 		}
 
 		if len(resolvedId) > 1 {
-                        log.Println("success to get resolvedid:" + resolvedId)
+            log.Println("success to get resolvedid:" + resolvedId)
 
 			fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\n")
 			fmt.Fprintf(clientConn, "Upgrade: websocket\r\n")
@@ -149,6 +150,8 @@ func handleConnection(clientConn net.Conn) {
 				return
 			}
 
+			log.Println(line)
+			
 			if len(line) > 10 && line[:10] == "Clientid: " {
 				resolvedId = line[10:30]
 			}
