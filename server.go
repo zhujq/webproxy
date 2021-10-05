@@ -89,6 +89,7 @@ func handleConnection(clientConn net.Conn) {
 	}
 	if line == "GET /listen HTTP/1.1\r\n" {
 		// This is for LISTENING
+		log.Println("start to receive get init")
 		resolvedId := ""
 		for line, err = reader.ReadString('\n'); true; line, err = reader.ReadString('\n') {
 			if err != nil {
@@ -153,6 +154,8 @@ func handleConnection(clientConn net.Conn) {
 			}
 
 			log.Println(line)
+			log.Println(len(line))
+			log.Println(line[:10])
 
 			if len(line) > 10 && line[:10] == "Clientid: " {
 				resolvedId = line[10:30]
