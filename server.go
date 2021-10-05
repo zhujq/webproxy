@@ -89,14 +89,14 @@ func handleConnection(clientConn net.Conn) {
 	}
 	if line == "GET /listen HTTP/1.1\r\n" {
 		// This is for LISTENING
-		log.Println("start to receive get init")
+		
 		resolvedId := ""
 		for line, err = reader.ReadString('\n'); true; line, err = reader.ReadString('\n') {
 			if err != nil {
 				log.Println("Failed to read following lines", err)
 				return
 			}
-			log.Println(line)
+		//	log.Println(line)
 
 			if len(line) > 10 && (line[:10] == "Clientid: " || line[:10] == "clientid: ") {      //2021-10-05增加，cloudflare 会把http头名改成小写
 				log.Println("Found clientid!")
@@ -117,7 +117,7 @@ func handleConnection(clientConn net.Conn) {
 			fmt.Fprintf(clientConn, "Connection: Upgrade\r\n")
 			fmt.Fprintf(clientConn, "Content-Type: application/octet-stream\r\n")
 			fmt.Fprintf(clientConn, "Connection: keep-alive\r\n")
-			fmt.Fprintf(clientConn, "Content-Length: 12345789000\r\n\r\n")
+			fmt.Fprintf(clientConn, "Content-Length: 999999\r\n\r\n")
 
 			wait := make(chan bool)
 
@@ -144,7 +144,6 @@ func handleConnection(clientConn net.Conn) {
 
 	} else if line == "GET /transmit HTTP/1.1\r\n" {
 		// This is for TRANSMITTING
-		log.Println("start to receive post init")
 	
 		resolvedId := ""
 		for line, err = reader.ReadString('\n'); true; line, err = reader.ReadString('\n') {
@@ -153,10 +152,11 @@ func handleConnection(clientConn net.Conn) {
 				return
 			}
 
-			log.Println(line)
+		//	log.Println(line)
 
 			
 			if len(line) > 10 && (line[:10] == "Clientid: " || line[:10] == "clientid: ") {           //2021-10-05增加，cloudflare 会把http头名改成小写
+				log.Println("Found clientid!")
 				resolvedId = line[10:30]
 				log.Println(resolvedId)
 			}
@@ -168,15 +168,12 @@ func handleConnection(clientConn net.Conn) {
 		}
 
 		if len(resolvedId) > 1 {
-
-		
 			fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\n")
-                        fmt.Fprintf(clientConn, "Upgrade: websocket\r\n")
-                        fmt.Fprintf(clientConn, "Connection: Upgrade\r\n")
-
+            fmt.Fprintf(clientConn, "Upgrade: websocket\r\n")
+            fmt.Fprintf(clientConn, "Connection: Upgrade\r\n")
 			fmt.Fprintf(clientConn, "Content-Type: application/octet-stream\r\n")
 			fmt.Fprintf(clientConn, "Connection: keep-alive\r\n")
-			fmt.Fprintf(clientConn, "Content-Length: 12345798000\r\n\r\n")
+			fmt.Fprintf(clientConn, "Content-Length: 999999\r\n\r\n")
 			wait := make(chan bool)
 
 			if _, ok := connectedClients[resolvedId]; !ok {
