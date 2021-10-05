@@ -11,7 +11,7 @@ import (
 )
 
 const port = "8080"
-const target = "213.188.194.199:10001"
+const target = "127.0.0.1:22"
 
 type client struct {
 	listenChannel        chan bool // Channel that the client is listening on
@@ -96,7 +96,7 @@ func handleConnection(clientConn net.Conn) {
 				log.Println("Failed to read following lines", err)
 				return
 			}
-		//	log.Println(line)
+			log.Println(line)
 
 			if len(line) > 10 && (line[:10] == "Clientid: " || line[:10] == "clientid: ") {      //2021-10-05增加，cloudflare 会把http头名改成小写
 				log.Println("Found clientid!")
@@ -156,7 +156,7 @@ func handleConnection(clientConn net.Conn) {
 				return
 			}
 
-		//	log.Println(line)
+			log.Println(line)
 
 			
 			if len(line) > 10 && (line[:10] == "Clientid: " || line[:10] == "clientid: ") {           //2021-10-05增加，cloudflare 会把http头名改成小写
