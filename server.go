@@ -115,10 +115,13 @@ func handleConnection(clientConn net.Conn) {
 			fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\n")
 			fmt.Fprintf(clientConn, "Upgrade: websocket\r\n")
 			fmt.Fprintf(clientConn, "Connection: Upgrade\r\n")
-		//	fmt.Fprintf(clientConn, "Content-Type: application/octet-stream\r\n")
+			fmt.Fprintf(clientConn, "Content-Type: application/octet-stream\r\n")
 			fmt.Fprintf(clientConn, "Connection: keep-alive\r\n")
 			fmt.Fprintf(clientConn, "Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n")
-			fmt.Fprintf(clientConn, "Content-Length: 999999\r\n\r\n")
+			fmt.Fprintf(clientConn, "Content-Encoding: gzip\r\n")
+			fmt.Fprintf(clientConn, "Transfer-Encoding: chunked\r\n\r\n")
+			
+		//	fmt.Fprintf(clientConn, "Content-Length: 999999\r\n\r\n")
 
 			wait := make(chan bool)
 
@@ -172,10 +175,13 @@ func handleConnection(clientConn net.Conn) {
 			fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\n")
             fmt.Fprintf(clientConn, "Upgrade: websocket\r\n")
             fmt.Fprintf(clientConn, "Connection: Upgrade\r\n")
-		//	fmt.Fprintf(clientConn, "Content-Type: application/octet-stream\r\n")
+			fmt.Fprintf(clientConn, "Content-Type: application/octet-stream\r\n")
 			fmt.Fprintf(clientConn, "Connection: keep-alive\r\n")
 			fmt.Fprintf(clientConn, "Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n")
-			fmt.Fprintf(clientConn, "Content-Length: 999999\r\n\r\n")
+			fmt.Fprintf(clientConn, "Content-Encoding: gzip\r\n")
+			fmt.Fprintf(clientConn, "Transfer-Encoding: chunked\r\n\r\n")
+			
+		//	fmt.Fprintf(clientConn, "Content-Length: 999999\r\n\r\n")
 			wait := make(chan bool)
 
 			if _, ok := connectedClients[resolvedId]; !ok {
