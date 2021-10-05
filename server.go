@@ -118,7 +118,8 @@ func handleConnection(clientConn net.Conn) {
 			fmt.Fprintf(clientConn, "Content-Type: application/octet-stream\r\n")
 			fmt.Fprintf(clientConn, "Connection: keep-alive\r\n")
 			fmt.Fprintf(clientConn, "Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n")
-			fmt.Fprintf(clientConn, "Content-Encoding: gzip\r\n")
+		//	fmt.Fprintf(clientConn, "Content-Encoding: gzip\r\n")
+			fmt.Fprintf(clientConn, "Strict-Transport-Security: max-age=15724800; includeSubDomains\r\n")
 			fmt.Fprintf(clientConn, "Transfer-Encoding: chunked\r\n\r\n")
 			
 		//	fmt.Fprintf(clientConn, "Content-Length: 999999\r\n\r\n")
@@ -178,7 +179,8 @@ func handleConnection(clientConn net.Conn) {
 			fmt.Fprintf(clientConn, "Content-Type: application/octet-stream\r\n")
 			fmt.Fprintf(clientConn, "Connection: keep-alive\r\n")
 			fmt.Fprintf(clientConn, "Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n")
-			fmt.Fprintf(clientConn, "Content-Encoding: gzip\r\n")
+		//	fmt.Fprintf(clientConn, "Content-Encoding: gzip\r\n")
+			fmt.Fprintf(clientConn, "Strict-Transport-Security: max-age=15724800; includeSubDomains\r\n")
 			fmt.Fprintf(clientConn, "Transfer-Encoding: chunked\r\n\r\n")
 			
 		//	fmt.Fprintf(clientConn, "Content-Length: 999999\r\n\r\n")
