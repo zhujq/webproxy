@@ -99,7 +99,7 @@ func handleConnection(clientConn net.Conn) {
 			}
 			log.Println(line)
 
-			if len(line) > 10 && line[:10] == "Clientid: " {
+			if len(line) > 10 && (line[:10] == "Clientid: " || line[:10] == "clientid: ") {      //2021-10-05增加，cloudflare 会把http头名改成小写
 				log.Println("Found clientid!")
 				resolvedId = line[10:30]
 				log.Println(resolvedId)
@@ -156,15 +156,12 @@ func handleConnection(clientConn net.Conn) {
 
 			log.Println(line)
 
-			if strings.HasPrefix(line ,"Clientid"){
+			
+			if len(line) > 10 && (line[:10] == "Clientid: " || line[:10] == "clientid: ") {           //2021-10-05增加，cloudflare 会把http头名改成小写
 				resolvedId = line[10:30]
 				log.Println(resolvedId)
 			}
-	/*		if len(line) > 10 && line[:10] == "Clientid: " {
-				resolvedId = line[10:30]
-				log.Println(resolvedId)
-			}
-    */
+    
 			
 			if line == "\r\n" {
 				break
