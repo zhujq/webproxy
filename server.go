@@ -98,7 +98,9 @@ func handleConnection(clientConn net.Conn) {
 			log.Println(line)
 
 			if len(line) > 10 && line[:10] == "Clientid: " {
+				log.Println("Found clientid!")
 				resolvedId = line[10:30]
+				log.Println(resolvedId)
 			}
 
 			if line == "\r\n" {
@@ -151,9 +153,10 @@ func handleConnection(clientConn net.Conn) {
 			}
 
 			log.Println(line)
-			
+
 			if len(line) > 10 && line[:10] == "Clientid: " {
 				resolvedId = line[10:30]
+				log.Println(resolvedId)
 			}
 
 			if line == "\r\n" {
