@@ -11,7 +11,7 @@ import (
 )
 
 const port = "8080"
-const target = "ub.fly.dev:10001"
+const target = "127.0.0.1:22"
 
 type client struct {
 	listenChannel        chan bool // Channel that the client is listening on
@@ -45,7 +45,7 @@ func bindServer(clientId string) {
 
 		wait := make(chan bool)
 
-		go func() {
+	/*	go func() {
 			_, err := io.Copy(connectedClients[clientId].listener, serverConn)
 			if err != nil {
 				log.Println("Down Conn Disconnect:", err)
@@ -53,7 +53,7 @@ func bindServer(clientId string) {
 
 			wait <- true
 		}()
-
+	*/
 		go func() {
 			_, err := io.Copy(serverConn, connectedClients[clientId].transmitter)
 			if err != nil {
