@@ -45,7 +45,7 @@ func bindServer(clientId string) {
 
 		wait := make(chan bool)
 
-	/*	go func() {
+		go func() {
 			_, err := io.Copy(connectedClients[clientId].listener, serverConn)
 			if err != nil {
 				log.Println("Down Conn Disconnect:", err)
@@ -53,7 +53,7 @@ func bindServer(clientId string) {
 
 			wait <- true
 		}()
-	*/
+
 		go func() {
 			_, err := io.Copy(serverConn, connectedClients[clientId].transmitter)
 			if err != nil {
@@ -112,8 +112,8 @@ func handleConnection(clientConn net.Conn) {
 		if len(resolvedId) > 1 {
             log.Println("success to get resolvedid:" + resolvedId)
 
-			fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\n")
-			fmt.Fprintf(clientConn, "Upgrade: websocket\r\n")
+			fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n")
+		/*	fmt.Fprintf(clientConn, "Upgrade: websocket\r\n")
 			fmt.Fprintf(clientConn, "Connection: Upgrade\r\n")
 			fmt.Fprintf(clientConn, "Content-Type: application/octet-stream\r\n")
 			fmt.Fprintf(clientConn, "Connection: keep-alive\r\n")
@@ -123,7 +123,7 @@ func handleConnection(clientConn net.Conn) {
 			fmt.Fprintf(clientConn, "Transfer-Encoding: chunked\r\n\r\n")
 			
 		//	fmt.Fprintf(clientConn, "Content-Length: 999999\r\n\r\n")
-
+		*/
 			wait := make(chan bool)
 
 			if _, ok := connectedClients[resolvedId]; !ok {
@@ -173,8 +173,8 @@ func handleConnection(clientConn net.Conn) {
 		}
 
 		if len(resolvedId) > 1 {
-			fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\n")
-            fmt.Fprintf(clientConn, "Upgrade: websocket\r\n")
+			fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n")
+        /*    fmt.Fprintf(clientConn, "Upgrade: websocket\r\n")
             fmt.Fprintf(clientConn, "Connection: Upgrade\r\n")
 			fmt.Fprintf(clientConn, "Content-Type: application/octet-stream\r\n")
 			fmt.Fprintf(clientConn, "Connection: keep-alive\r\n")
@@ -182,7 +182,7 @@ func handleConnection(clientConn net.Conn) {
 		//	fmt.Fprintf(clientConn, "Content-Encoding: gzip\r\n")
 			fmt.Fprintf(clientConn, "Strict-Transport-Security: max-age=15724800; includeSubDomains\r\n")
 			fmt.Fprintf(clientConn, "Transfer-Encoding: chunked\r\n\r\n")
-			
+		*/	
 		//	fmt.Fprintf(clientConn, "Content-Length: 999999\r\n\r\n")
 			wait := make(chan bool)
 
