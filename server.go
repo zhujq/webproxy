@@ -11,7 +11,7 @@ import (
 )
 
 const port = "8080"
-const target = "127.0.0.1:22"
+const target = "ub.fly.dev:10001"
 
 type client struct {
 	listenChannel        chan bool // Channel that the client is listening on
