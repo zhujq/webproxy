@@ -48,7 +48,7 @@ func bindServer(clientId string) {
 		go func() {
 			_, err := io.Copy(connectedClients[clientId].listener, serverConn)
 			if err != nil {
-				log.Println("Disconnect:", err)
+				log.Println("Down Conn Disconnect:", err)
 			}
 
 			wait <- true
@@ -57,7 +57,7 @@ func bindServer(clientId string) {
 		go func() {
 			_, err := io.Copy(serverConn, connectedClients[clientId].transmitter)
 			if err != nil {
-				log.Println("Disconnect:", err)
+				log.Println("Up Conn Disconnect:", err)
 			}
 
 			wait <- true
