@@ -7,10 +7,10 @@ import (
 	"log"
 	"net"
 	"runtime/debug"
-//	"os"
+	"os"
 )
 
-const port = "8080"
+//const port = "8080"
 const target = "127.0.0.1:22"
 
 type client struct {
@@ -217,6 +217,7 @@ func handleConnection(clientConn net.Conn) {
 
 func main() {
 	log.Println("Listening...")
+	port := os.Getenv("PORT")
 	ln, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		log.Println("Error listening!", err)
