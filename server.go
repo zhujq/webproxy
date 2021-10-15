@@ -37,7 +37,7 @@ func bindServer(clientId string) {
 
 		serverConn, err := net.Dial("tcp", target)
 		if err != nil {
-			log.Println("Failed to connect to remote server :/", err)
+			log.Println("Failed to connect to ssh server:", err)
 		}
                 log.Println("success to dial" + target)
 
