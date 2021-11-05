@@ -14,7 +14,11 @@
       ]
     },
     "streamSettings": {
-      "network": "ws"
+      "network": "ws",
+        "security": "none",
+          "wsSettings": {
+          "path": "/dw"
+        }
     }
   },
   "outbound": {
