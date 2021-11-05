@@ -212,6 +212,21 @@ func handleConnection(clientConn net.Conn) {
 			log.Println("error to connect to v2ray:", err)
 			return
 		}
+		str := line
+		for line, err = reader.ReadString('\n'); true; line, err = reader.ReadString('\n') {
+			if err != nil {
+				log.Println("Failed to read following lines", err)
+				return
+			}
+
+			str += line
+
+			if line == "\r\n" {
+				break
+			}
+		}
+
+		server.Write([]byte(str))
 		go io.Copy(server, clientConn)
 		io.Copy(clientConn, server)
 
