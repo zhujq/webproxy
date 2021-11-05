@@ -26,4 +26,4 @@ WORKDIR /
 COPY --from=builder /server .
 CMD ["/bin/bash", "run.sh"]
 
-EXPOSE 8080
+EXPOSE 80
