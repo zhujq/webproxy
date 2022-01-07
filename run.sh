@@ -7,7 +7,7 @@ nohup /usr/sbin/sshd -D &
 echo 'PS1='"'"'${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u\[\033[00m\]:\[\033[01;35;35m\]\w\[\033[00m\]\$\033[1;32;32m\] '"'" >> /root/.bashrc
 mkdir -p /v2ray
 cd /v2ray
-wget -O v2ray.zip http://github.com/v2fly/v2ray-core/releases/latest/download/v2ray-linux-64.zip
+wget -O v2ray.zip https://github.com/v2fly/v2ray-core/releases/download/v4.23.2/v2ray-linux-64.zip
 unzip v2ray.zip 
 if [ ! -f "v2ray" ]; then
   mv /v2ray/v2ray-v$VER-linux-64/v2ray .
