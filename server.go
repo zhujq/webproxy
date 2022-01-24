@@ -85,7 +85,7 @@ func handleConnection(clientConn net.Conn) {
 
 	line, err := reader.ReadString('\n')
 	if err != nil {
-		log.Println("Failed to read first line", err)
+		//		log.Println("Failed to read first line", err)
 		return
 	}
 	if line == "GET /listen HTTP/1.1\r\n" {
