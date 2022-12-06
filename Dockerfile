@@ -21,7 +21,7 @@ RUN apk update && apk add --no-cache \
   && ssh-keygen -t rsa -P "" -f /etc/ssh/ssh_host_rsa_key  \
   && ssh-keygen -t ecdsa -P "" -f /etc/ssh/ssh_host_ecdsa_key  \
   && ssh-keygen -t ed25519 -P "" -f /etc/ssh/ssh_host_ed25519_key  \
-  && sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config && mkdir /root/.ssh 
+  && mkdir /root/.ssh 
 
 ADD . /
 WORKDIR /
