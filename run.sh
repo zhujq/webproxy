@@ -1,9 +1,9 @@
 #!/bin/bash
 export USER=root
 mkdir -p /var/run/sshd
-mv /authorized_keys /root/.ssh/authorized_keys
+# mv /authorized_keys /root/.ssh/authorized_keys
 mv /id_rsa /root/.ssh/id_rsa
-mv /id_rsa.pub /root/.ssh/id_rsa.pub
+mv /id_rsa.pub /root/.ssh/authorized_keys
 chmod 600 /root/.ssh/authorized_keys
 chmod 600 /root/.ssh/id_rsa
 chmod 644 /root/.ssh/id_rsa.pub
