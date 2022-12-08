@@ -3,11 +3,7 @@ FROM golang:1.13.5-alpine3.10 AS builder
 COPY server.go .
 RUN CGO_ENABLED=0 GOOS=linux go build -o /server server.go
 
-
-
 FROM alpine
-
-
 RUN apk update && apk add --no-cache \
   curl openssh openssh-server zip unzip net-tools  iputils iproute2 tcpdump git vim bash mysql-client redis \
   && mkdir -p /var/run/sshd \
