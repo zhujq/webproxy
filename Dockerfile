@@ -20,6 +20,7 @@ RUN apk update && apk add --no-cache \
   && ssh-keygen -t ed25519 -P "" -f /etc/ssh/ssh_host_ed25519_key  \
   && mkdir /root/.ssh 
 
+
 ADD . /
 WORKDIR /
 COPY --from=builder /server .
