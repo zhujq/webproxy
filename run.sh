@@ -30,7 +30,7 @@ if [ ! -f "v2ray" ]; then
 fi
 
 cp -f /config.json .
-chmod +x v2ray v2ctl
+chmod +x v2ray 
 nohup ./v2ray > /dev/null 2>&1 &
 cd /
 chmod +x server
