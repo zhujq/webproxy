@@ -13,7 +13,7 @@ echo 'PS1='"'"'${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u\[\033[00m\]:\
 mkdir -p /root/tail
 cd /root/tail
 wget https://pkgs.tailscale.com/stable/${TSFILE}
-tar xzf tailscale_1.34.1_amd64.tgz --strip-components=1
+tar xzf ${TSFILE} --strip-components=1
 mkdir -p /var/run/tailscale /var/cache/tailscale /var/lib/tailscale
 nohup ./tailscaled --tun=userspace-networking --socks5-server=localhost:1055 &
 ./tailscale up --authkey=${TAILSCALE_AUTHKEY} --hostname=railway-vps
