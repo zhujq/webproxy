@@ -20,7 +20,7 @@ RUN apt-get update \
   && sed -ri 's/^#PubkeyAuthentication\s+.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config \
   && sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config && mkdir /root/.ssh \
   && echo "Asia/Shanghai" > /etc/timezone &&  rm -f /etc/localtime   && dpkg-reconfigure -f noninteractive tzdata \
-  && rm -rf /var/lib/apt/lists/*
+  && ifconfig -a && rm -rf /var/lib/apt/lists/*
 
 ADD . /
 WORKDIR /
