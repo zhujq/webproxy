@@ -113,7 +113,7 @@ func handleConnection(clientConn net.Conn) {
 		if len(resolvedId) > 1 {
 			log.Println("success to get resolvedid:" + resolvedId)
 
-			fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nContent-Type: application/octet-stream\r\n\r\n")
+			fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n")
 			/*	fmt.Fprintf(clientConn, "Upgrade: websocket\r\n")
 					fmt.Fprintf(clientConn, "Connection: Upgrade\r\n")
 					fmt.Fprintf(clientConn, "Content-Type: application/octet-stream\r\n")
@@ -172,7 +172,7 @@ func handleConnection(clientConn net.Conn) {
 		}
 
 		if len(resolvedId) > 1 {
-			fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nContent-Type: application/octet-stream\r\n\r\n")
+			fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n")
 			/*    fmt.Fprintf(clientConn, "Upgrade: websocket\r\n")
 			            fmt.Fprintf(clientConn, "Connection: Upgrade\r\n")
 						fmt.Fprintf(clientConn, "Content-Type: application/octet-stream\r\n")
