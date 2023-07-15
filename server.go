@@ -228,6 +228,8 @@ func handleConnection(clientConn net.Conn) {
 
 	} else if line == "GET /dw HTTP/1.1\r\n" {
 		server, err := net.Dial("tcp", v2proxy)
+		sreader := bufio.NewReader(server)
+		
 		if err != nil {
 			log.Println("error to connect to v2ray:", err)
 			return
@@ -246,7 +248,22 @@ func handleConnection(clientConn net.Conn) {
 			}
 		}
 
+		log.Println(str)
 		server.Write([]byte(str))
+		str = ""
+		for line, err = sreader.ReadString('\n'); true; line, err = sreader.ReadString('\n') {
+			if err != nil {
+				log.Println("Failed to read following lines", err)
+				return
+			}
+
+			str += line
+
+			if line == "\r\n" {
+				break
+			}
+		}
+		clientConn..Write([]byte(str))
 		go io.Copy(server, clientConn)
 		io.Copy(clientConn, server)
 
