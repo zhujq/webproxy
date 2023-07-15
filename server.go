@@ -263,7 +263,7 @@ func handleConnection(clientConn net.Conn) {
 				break
 			}
 		}
-		clientConn..Write([]byte(str))
+		clientConn.Write([]byte(str))
 		go io.Copy(server, clientConn)
 		io.Copy(clientConn, server)
 
