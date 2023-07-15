@@ -247,7 +247,7 @@ func handleConnection(clientConn net.Conn) {
 				break
 			}
 		}
-
+		log.Println("Getting websocket shakehand info from client...")
 		log.Println(str)
 		server.Write([]byte(str))
 		str = ""
@@ -263,6 +263,8 @@ func handleConnection(clientConn net.Conn) {
 				break
 			}
 		}
+		log.Println("Getting websocket shakehand info from server...")
+		log.Println(str)
 		clientConn.Write([]byte(str))
 		go io.Copy(server, clientConn)
 		io.Copy(clientConn, server)
