@@ -117,7 +117,7 @@ func handleConnection(clientConn net.Conn) {
 				log.Println(resolvedId)
 			}
 			
-			if line[:19] == "Sec-WebSocket-Key: " || line[:19] == Sec-Websocket-Key: " || line[:19] == sec-websocket-key: "{
+			if line[:19] == "Sec-WebSocket-Key: " || line[:19] == "Sec-Websocket-Key: " || line[:19] == "sec-websocket-key: "{
 				seckey = line[19:]
 			}
 			
@@ -183,7 +183,7 @@ func handleConnection(clientConn net.Conn) {
 				log.Println(resolvedId)
 			}
 
-			if line[:19] == "Sec-WebSocket-Key: " || line[:19] == Sec-Websocket-Key: " || line[:19] == sec-websocket-key: "{
+			if line[:19] == "Sec-WebSocket-Key: " || line[:19] == "Sec-Websocket-Key: " || line[:19] == "sec-websocket-key: "{
 				seckey = line[19:]
 			}
 			if line == "\r\n" {
