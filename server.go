@@ -126,10 +126,10 @@ func handleConnection(clientConn net.Conn) {
 			}
 		}
 
+		fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: "+ secWebSocketAccept(seckey) +"\r\n\r\n")
+
 		if len(resolvedId) > 1 {
 			log.Println("success to get resolvedid:" + resolvedId)
-			
-			fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: "+ secWebSocketAccept(seckey) +"\r\n\r\n")
 			/*	fmt.Fprintf(clientConn, "Upgrade: websocket\r\n")
 					fmt.Fprintf(clientConn, "Connection: Upgrade\r\n")
 					fmt.Fprintf(clientConn, "Content-Type: application/octet-stream\r\n")
@@ -148,15 +148,12 @@ func handleConnection(clientConn net.Conn) {
 			}
 
 			currentClient := connectedClients[resolvedId]
-
 			currentClient.listener = clientConn
 			currentClient.listenChannel = wait
 			currentClient.listenerConnected = true
-
 			connectedClients[resolvedId] = currentClient
 
 			log.Println("Attempting to bind listener")
-
 			go bindServer(resolvedId)
 
 			<-wait
@@ -190,9 +187,9 @@ func handleConnection(clientConn net.Conn) {
 				break
 			}
 		}
-
-		if len(resolvedId) > 1 {
-			fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: "+secWebSocketAccept(seckey)+"\r\n\r\n")
+		fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: "+secWebSocketAccept(seckey)+"\r\n\r\n")
+		
+		if len(resolvedId) > 1 {	
 			/*    fmt.Fprintf(clientConn, "Upgrade: websocket\r\n")
 			            fmt.Fprintf(clientConn, "Connection: Upgrade\r\n")
 						fmt.Fprintf(clientConn, "Content-Type: application/octet-stream\r\n")
@@ -210,17 +207,13 @@ func handleConnection(clientConn net.Conn) {
 			}
 
 			currentClient := connectedClients[resolvedId]
-
 			currentClient.transmitter = reader
 			currentClient.transmitChannel = wait
 			currentClient.transmitterConnected = true
-
 			connectedClients[resolvedId] = currentClient
-
+			
 			log.Println("Attempting to bind transmission")
-
 			go bindServer(resolvedId)
-
 			<-wait
 		} else {
 			log.Println("Failed to find client id!")
