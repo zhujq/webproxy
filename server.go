@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"crypto/sha1"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"log"
@@ -24,6 +26,15 @@ type client struct {
 }
 
 var connectedClients map[string]client = make(map[string]client)
+var keyGUID = []byte("258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
+
+func secWebSocketAccept(secWebSocketKey string) string {
+	h := sha1.New()
+	h.Write([]byte(secWebSocketKey))
+	h.Write(keyGUID)
+
+	return base64.StdEncoding.EncodeToString(h.Sum(nil))
+}
 
 func bindServer(clientId string) {
 	if connectedClients[clientId].listenerConnected && connectedClients[clientId].transmitterConnected {
@@ -92,6 +103,7 @@ func handleConnection(clientConn net.Conn) {
 		// This is for LISTENING
 
 		resolvedId := ""
+		seckey := ""
 		for line, err = reader.ReadString('\n'); true; line, err = reader.ReadString('\n') {
 			if err != nil {
 				log.Println("Failed to read following lines", err)
@@ -105,6 +117,10 @@ func handleConnection(clientConn net.Conn) {
 				log.Println(resolvedId)
 			}
 
+			if len(line) > 19 && (line[:19] == "Sec-WebSocket-Key: " || line[:19] == "Sec-Websocket-Key: " || line[:19] == "sec-websocket-key: ") {
+				seckey = line[19:]
+			}
+
 			if line == "\r\n" {
 				break
 			}
@@ -113,7 +129,7 @@ func handleConnection(clientConn net.Conn) {
 		if len(resolvedId) > 1 {
 			log.Println("success to get resolvedid:" + resolvedId)
 
-			fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nContent-Type: application/octet-stream\r\nConnection: keep-alive\r\n\r\n")
+			fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: "+secWebSocketAccept(seckey)+"\r\n\r\n")
 			/*	fmt.Fprintf(clientConn, "Upgrade: websocket\r\n")
 					fmt.Fprintf(clientConn, "Connection: Upgrade\r\n")
 					fmt.Fprintf(clientConn, "Content-Type: application/octet-stream\r\n")
@@ -152,6 +168,7 @@ func handleConnection(clientConn net.Conn) {
 		// This is for TRANSMITTING
 
 		resolvedId := ""
+		seckey := ""
 		for line, err = reader.ReadString('\n'); true; line, err = reader.ReadString('\n') {
 			if err != nil {
 				log.Println("Failed to read following lines")
@@ -166,13 +183,18 @@ func handleConnection(clientConn net.Conn) {
 				log.Println(resolvedId)
 			}
 
+			if len(line) > 19 && (line[:19] == "Sec-WebSocket-Key: " || line[:19] == "Sec-Websocket-Key: " || line[:19] == "sec-websocket-key: ") {
+				seckey = line[19:]
+			}
+
 			if line == "\r\n" {
 				break
 			}
 		}
 
 		if len(resolvedId) > 1 {
-			fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nContent-Type: application/octet-stream\r\nConnection: keep-alive\r\n\r\n")
+			fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: "+secWebSocketAccept(seckey)+"\r\n\r\n")
+			//	fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nContent-Type: application/octet-stream\r\nConnection: keep-alive\r\n\r\n")
 			/*    fmt.Fprintf(clientConn, "Upgrade: websocket\r\n")
 			            fmt.Fprintf(clientConn, "Connection: Upgrade\r\n")
 						fmt.Fprintf(clientConn, "Content-Type: application/octet-stream\r\n")
@@ -234,7 +256,7 @@ func handleConnection(clientConn net.Conn) {
 		fmt.Fprintf(clientConn, "HTTP/1.1 404 Not found\r\n")
 		fmt.Fprintf(clientConn, "Content-Type: text/plain\r\n")
 		fmt.Fprintf(clientConn, "Content-Length: 8\r\n\r\n")
-		fmt.Fprintf(clientConn, "u wot m9")
+		fmt.Fprintf(clientConn, "u got m9")
 	}
 }
 
