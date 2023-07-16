@@ -1,15 +1,14 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
 	"io"
 	"log"
 	"net"
-	"runtime/debug"
-	"crypto/sha1"
-	"encoding/base64"
-	//	"os"
+	"net/http"
+	"strings"
+	"time"
+
+	"golang.org/x/net/websocket"
 )
 
 const port = "80"
@@ -17,24 +16,15 @@ const target = "127.0.0.1:22"
 const v2proxy = "127.0.0.1:8080"
 
 type client struct {
-	listenChannel        chan bool // Channel that the client is listening on
-	transmitChannel      chan bool // Channel that the client is writing to
-	listener             io.Writer // The thing to write to
+	listenChannel        chan bool       // Channel that the client is listening on
+	transmitChannel      chan bool       // Channel that the client is writing to
+	listener             *websocket.Conn // The thing to write to
 	listenerConnected    bool
-	transmitter          io.Reader // The thing to listen from
+	transmitter          *websocket.Conn // The thing to listen from
 	transmitterConnected bool
 }
 
 var connectedClients map[string]client = make(map[string]client)
-var keyGUID = []byte("258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
-
-func secWebSocketAccept(secWebSocketKey string) string {
-	h := sha1.New()
-	h.Write([]byte(secWebSocketKey))
-	h.Write(keyGUID)
-
-	return base64.StdEncoding.EncodeToString(h.Sum(nil))
-}
 
 func bindServer(clientId string) {
 	if connectedClients[clientId].listenerConnected && connectedClients[clientId].transmitterConnected {
@@ -58,6 +48,7 @@ func bindServer(clientId string) {
 		wait := make(chan bool)
 
 		go func() {
+
 			_, err := io.Copy(connectedClients[clientId].listener, serverConn)
 			if err != nil {
 				log.Println("Down Conn Disconnect:", err)
@@ -83,209 +74,138 @@ func bindServer(clientId string) {
 	}
 }
 
-func handleConnection(clientConn net.Conn) {
-	defer clientConn.Close()
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Println("Connection panic:", r)
-			debug.PrintStack()
+func lsHandler(w *websocket.Conn) {
+	resolvedId := ""
+	for {
+		var message string
+		websocket.Message.Receive(w, &message)
+		line := string(message)
+		if len(line) > 10 && (line[:10] == "Clientid: " || line[:10] == "clientid: ") {
+			log.Println("Found clientid!")
+			resolvedId = line[10:30]
+			log.Println(resolvedId)
+			break
 		}
-	}()
+	}
+	wait := make(chan bool)
 
-	reader := bufio.NewReader(clientConn)
+	if _, ok := connectedClients[resolvedId]; !ok {
+		connectedClients[resolvedId] = client{}
+	}
 
-	line, err := reader.ReadString('\n')
-	if err != nil {
-		//		log.Println("Failed to read first line", err)
+	currentClient := connectedClients[resolvedId]
+
+	currentClient.listener = w
+	currentClient.listenChannel = wait
+	currentClient.listenerConnected = true
+
+	connectedClients[resolvedId] = currentClient
+
+	log.Println("Attempting to bind listener")
+
+	go bindServer(resolvedId)
+
+	<-wait
+
+}
+
+func tsHandler(w *websocket.Conn) {
+	resolvedId := ""
+	for {
+		var message string
+		websocket.Message.Receive(w, &message)
+		line := string(message) //读取客户端发生的clientid
+		if len(line) > 10 && (line[:10] == "Clientid: " || line[:10] == "clientid: ") {
+			log.Println("Found clientid!")
+			resolvedId = line[10:30]
+			log.Println(resolvedId)
+			break
+		}
+	}
+
+	wait := make(chan bool)
+
+	if _, ok := connectedClients[resolvedId]; !ok {
+		connectedClients[resolvedId] = client{}
+	}
+
+	currentClient := connectedClients[resolvedId]
+
+	currentClient.transmitter = w
+	currentClient.transmitChannel = wait
+	currentClient.transmitterConnected = true
+
+	connectedClients[resolvedId] = currentClient
+
+	log.Println("Attempting to bind transmission")
+
+	go bindServer(resolvedId)
+
+	<-wait
+
+}
+
+func defHandler(w *websocket.Conn) {
+	var err error
+	for {
+		var reply string
+		if err = websocket.Message.Receive(w, &reply); err != nil {
+			log.Println("接受消息失败", err)
+			break
+		}
+		msg := time.Now().String() + reply
+		//log.Println(msg)
+		if err = websocket.Message.Send(w, msg); err != nil {
+			log.Println("发送消息失败")
+			break
+		}
+	}
+}
+
+func rayHandler(w http.ResponseWriter, r *http.Request) {
+	str := "GET /dw HTTP/1.1\r\n"
+	str += ("Host: " + r.Host + "\r\n")
+	for k, v := range r.Header {
+		str += (k + ": " + strings.Join(v, ",") + "\r\n")
+	}
+	str += "\r\n"
+	log.Println(str)
+
+	//log.Println("Getting ray access request...")
+	hj, ok := w.(http.Hijacker)
+	if !ok {
+		log.Println("Hijacker error")
+		http.Error(w, "webserver doesn't support hijacking", http.StatusInternalServerError)
 		return
 	}
-	if line == "GET /listen HTTP/1.1\r\n" {
-		// This is for LISTENING
 
-		resolvedId := ""
-		seckey := ""
-		for line, err = reader.ReadString('\n'); true; line, err = reader.ReadString('\n') {
-			if err != nil {
-				log.Println("Failed to read following lines", err)
-				return
-			}
-			log.Println(line)
-
-			if len(line) > 10 && (line[:10] == "Clientid: " || line[:10] == "clientid: ") { //2021-10-05增加，cloudflare 会把http头名改成小写
-				log.Println("Found clientid!")
-				resolvedId = line[10:30]
-				log.Println(resolvedId)
-			}
-			
-			if len(line) > 19 && (line[:19] == "Sec-WebSocket-Key: " || line[:19] == "Sec-Websocket-Key: " || line[:19] == "sec-websocket-key: "){
-				seckey = line[19:]
-			}
-			
-			if line == "\r\n" {
-				break
-			}
-		}
-
-		fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: "+ secWebSocketAccept(seckey) +"\r\n\r\n")
-
-		if len(resolvedId) > 1 {
-			log.Println("success to get resolvedid:" + resolvedId)
-			/*	fmt.Fprintf(clientConn, "Upgrade: websocket\r\n")
-					fmt.Fprintf(clientConn, "Connection: Upgrade\r\n")
-					fmt.Fprintf(clientConn, "Content-Type: application/octet-stream\r\n")
-					fmt.Fprintf(clientConn, "Connection: keep-alive\r\n")
-					fmt.Fprintf(clientConn, "Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n")
-				//	fmt.Fprintf(clientConn, "Content-Encoding: gzip\r\n")
-					fmt.Fprintf(clientConn, "Strict-Transport-Security: max-age=15724800; includeSubDomains\r\n")
-					fmt.Fprintf(clientConn, "Transfer-Encoding: chunked\r\n\r\n")
-
-				//	fmt.Fprintf(clientConn, "Content-Length: 999999\r\n\r\n")
-			*/
-			wait := make(chan bool)
-
-			if _, ok := connectedClients[resolvedId]; !ok {
-				connectedClients[resolvedId] = client{}
-			}
-
-			currentClient := connectedClients[resolvedId]
-			currentClient.listener = clientConn
-			currentClient.listenChannel = wait
-			currentClient.listenerConnected = true
-			connectedClients[resolvedId] = currentClient
-
-			log.Println("Attempting to bind listener")
-			go bindServer(resolvedId)
-
-			<-wait
-		} else {
-			log.Println("Failed to find client id!")
-		}
-
-	} else if line == "GET /transmit HTTP/1.1\r\n" {
-		// This is for TRANSMITTING
-
-		resolvedId := ""
-		seckey := ""
-		for line, err = reader.ReadString('\n'); true; line, err = reader.ReadString('\n') {
-			if err != nil {
-				log.Println("Failed to read following lines")
-				return
-			}
-
-			log.Println(line)
-
-			if len(line) > 10 && (line[:10] == "Clientid: " || line[:10] == "clientid: ") { //2021-10-05增加，cloudflare 会把http头名改成小写
-				log.Println("Found clientid!")
-				resolvedId = line[10:30]
-				log.Println(resolvedId)
-			}
-
-			if len(line) > 19 && (line[:19] == "Sec-WebSocket-Key: " || line[:19] == "Sec-Websocket-Key: " || line[:19] == "sec-websocket-key: "){
-				seckey = line[19:]
-			}
-			if line == "\r\n" {
-				break
-			}
-		}
-		fmt.Fprintf(clientConn, "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: "+secWebSocketAccept(seckey)+"\r\n\r\n")
-		
-		if len(resolvedId) > 1 {	
-			/*    fmt.Fprintf(clientConn, "Upgrade: websocket\r\n")
-			            fmt.Fprintf(clientConn, "Connection: Upgrade\r\n")
-						fmt.Fprintf(clientConn, "Content-Type: application/octet-stream\r\n")
-						fmt.Fprintf(clientConn, "Connection: keep-alive\r\n")
-						fmt.Fprintf(clientConn, "Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n")
-					//	fmt.Fprintf(clientConn, "Content-Encoding: gzip\r\n")
-						fmt.Fprintf(clientConn, "Strict-Transport-Security: max-age=15724800; includeSubDomains\r\n")
-						fmt.Fprintf(clientConn, "Transfer-Encoding: chunked\r\n\r\n")
-			*/
-			//	fmt.Fprintf(clientConn, "Content-Length: 999999\r\n\r\n")
-			wait := make(chan bool)
-
-			if _, ok := connectedClients[resolvedId]; !ok {
-				connectedClients[resolvedId] = client{}
-			}
-
-			currentClient := connectedClients[resolvedId]
-			currentClient.transmitter = reader
-			currentClient.transmitChannel = wait
-			currentClient.transmitterConnected = true
-			connectedClients[resolvedId] = currentClient
-			
-			log.Println("Attempting to bind transmission")
-			go bindServer(resolvedId)
-			<-wait
-		} else {
-			log.Println("Failed to find client id!")
-		}
-
-	} else if line == "GET /dw HTTP/1.1\r\n" {
-		server, err := net.Dial("tcp", v2proxy)
-		sreader := bufio.NewReader(server)
-		
-		if err != nil {
-			log.Println("error to connect to v2ray:", err)
-			return
-		}
-		str := line
-		for line, err = reader.ReadString('\n'); true; line, err = reader.ReadString('\n') {
-			if err != nil {
-				log.Println("Failed to read following lines", err)
-				return
-			}
-
-			str += line
-
-			if line == "\r\n" {
-				break
-			}
-		}
-		log.Println("Getting websocket shakehand info from client...")
-		log.Println(str)
-		server.Write([]byte(str))
-		str = ""
-		for line, err = sreader.ReadString('\n'); true; line, err = sreader.ReadString('\n') {
-			if err != nil {
-				log.Println("Failed to read following lines", err)
-				return
-			}
-
-			str += line
-
-			if line == "\r\n" {
-				break
-			}
-		}
-		log.Println("Getting websocket shakehand info from server...")
-		log.Println(str)
-		clientConn.Write([]byte(str))
-		go io.Copy(server, clientConn)
-		io.Copy(clientConn, server)
-
-	} else {
-		fmt.Fprintf(clientConn, "HTTP/1.1 404 Not found\r\n")
-		fmt.Fprintf(clientConn, "Content-Type: text/plain\r\n")
-		fmt.Fprintf(clientConn, "Content-Length: 8\r\n\r\n")
-		fmt.Fprintf(clientConn, "u wot m9")
+	clientConn, _, err := hj.Hijack()
+	if err != nil {
+		log.Println("Hijacker Conn error")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
+
+	//log.Println("hj.hijacker is ok")
+	defer clientConn.Close()
+
+	server, err := net.Dial("tcp", v2proxy)
+	if err != nil {
+		log.Println("error to connect to v2ray:", err)
+		return
+	}
+
+	server.Write([]byte(str))
+	go io.Copy(server, clientConn)
+	io.Copy(clientConn, server)
+
 }
 
 func main() {
 	log.Println("Listening...")
-	ln, err := net.Listen("tcp", ":"+port)
-	if err != nil {
-		log.Println("Error listening!", err)
-		return
-	}
-	//	log.Println(os.Getenv("QOVERY_BRANCH_NAME"))
-	//	log.Println(os.Getenv("QOVERY_APPLICATION_WEBPROXY_HOSTNAME"))
-	for true {
-		conn, err := ln.Accept()
-		if err != nil {
-			log.Println("Error accepting connection", err)
-			continue
-		}
-
-		go handleConnection(conn)
-	}
+	http.Handle("/listen", websocket.Handler(lsHandler))
+	http.Handle("/transmit", websocket.Handler(tsHandler))
+	http.HandleFunc("/dw", rayHandler)
+	http.Handle("/", websocket.Handler(defHandler))
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
