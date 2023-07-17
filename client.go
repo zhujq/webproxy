@@ -1,27 +1,25 @@
 package main
 
 import (
-	"bufio"
-//	"fmt"
+	rand2 "crypto/rand"
+	"crypto/tls"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"math/rand"
-	"time"
 	"net"
-	"crypto/tls"
-	"encoding/json"
+	"net/url"
 	"os"
 	"strings"
-//	"sync"
-//	"crypto/x509"
-//	"io/ioutil"
-//  "github.com/robfig/cron"
+	"time"
+	"golang.org/x/net/websocket"
 )
 
-//const proxyDomain = "ub-proxy-service-zhujq.cloud.okteto.net"
-//const port = "9999"
 
 var letters = []rune("abcdefghijklmnopqrstuvwyz1234567890")
+var keyGUID = []byte("258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
 
 type Serv_port struct {
     Port  string `json:"port"`
@@ -29,6 +27,16 @@ type Serv_port struct {
 }
 
 var webserv_port map[string]string
+
+func secWebSocketKey() (string, error) {
+	rr := rand2.Reader
+	b := make([]byte, 16)
+	_, err := io.ReadFull(rr, b)
+	if err != nil {
+		return "", fmt.Errorf("failed to read random data from rand.Reader: %w", err)
+	}
+	return base64.StdEncoding.EncodeToString(b), nil
+}
 
 func randSeq(n int) string {
 	b := make([]rune, n)
@@ -40,32 +48,16 @@ func randSeq(n int) string {
 }
 
 func makedefaultcf(){
-	webserv_port["9999"] = "ub-proxy-service-zhujq.cloud.okteto.net"	
-	webserv_port["9997"] = "zhujq-ssh.run.goorm.io"	
+	webserv_port["9991"] = "web.zhujq.ml"
 }
 
 func handleConnection(clientConn net.Conn,webServer string) {
 	defer clientConn.Close()
-
-//	conf := &tls.Config{
-//		InsecureSkipVerify: true,
-//	}
-/*	pool := x509.NewCertPool()
-	caCertPath := "cloud-okteto-net-chain.pem"
-
-	caCrt, err := ioutil.ReadFile(caCertPath)
-	if err != nil {
-		log.Println("ReadFile err:", err)
-		return
-	}
-	pool.AppendCertsFromPEM(caCrt)
-	conf := &tls.Config{RootCAs: pool}
-*/	conf := &tls.Config{InsecureSkipVerify: true}
-		
+	var slconfig, ssconfig websocket.Config
+	slconfig.TlsConfig = &tls.Config{InsecureSkipVerify: true}
+	ssconfig.TlsConfig = &tls.Config{InsecureSkipVerify: true}
+	var serverListen, serverSend string
 	proxyDomain := webServer
-	
-	var err error
-	var serverListen,serverSend net.Conn
 
 	if strings.Contains(proxyDomain,":") == false {   //地址信息不含端口号
 		proxyDomain += ":"
@@ -74,155 +66,74 @@ func handleConnection(clientConn net.Conn,webServer string) {
 		proxyDomain += "443"
 	}
 
-	if  strings.HasSuffix(proxyDomain,":443"){
-		serverListen, err = tls.Dial("tcp", proxyDomain,conf)
-	}else{
-		serverListen, err = net.Dial("tcp", proxyDomain)
+	if strings.HasSuffix(proxyDomain, ":443") {
+		serverListen = ("wss://" + proxyDomain + "/listen")
+		serverSend = ("wss://" + proxyDomain + "/transmit")
+	} else {
+		serverListen = ("ws://" + proxyDomain + "/listen")
+		serverSend = ("ws://" + proxyDomain + "/transmit")
 	}
 
-	if err != nil {
-		log.Println(proxyDomain+":Failed to connect to listen proxy server!",err)
-		return
-	}
-
-	log.Println(proxyDomain+":Success dial to Server_listen")
-
-/*	err = serverListen.Handshake() 
-	if err != nil {
-		log.Println(proxyDomain+":Failed to ssl handshake!",err)
-		return
-	}
-*/
-	if  strings.HasSuffix(proxyDomain,":443"){
-		serverSend, err = tls.Dial("tcp", proxyDomain,conf)
-	}else{
-		serverSend, err = net.Dial("tcp", proxyDomain)
-	}
-
-	if err != nil {
-		log.Println(proxyDomain+":Failed to connect to send proxy server! ",err)
-		return
-	}
-
-	log.Println(proxyDomain+":Success dial to Server_send")
-
-	defer serverListen.Close()
-	defer serverSend.Close()
+	slurl, _ := url.Parse(serverListen)
+	ori, _ := url.Parse("https://" + proxyDomain)
+	ssurl, _ := url.Parse(serverSend)
+	slconfig.Location = slurl
+	slconfig.Origin = ori
+	slconfig.Version = 13
+	ssconfig.Location = ssurl
+	ssconfig.Origin = ori
+	ssconfig.Version = 13
 
 	clientId := randSeq(20)
-
 	wait := make(chan bool)
 
 	go func() {
-		log.Println(proxyDomain+":starting to get websocket upgrade")
-
-		_, err =serverListen.Write([]byte("GET /listen HTTP/1.1\r\n"+"Host: "+webServer+"\r\n"+"Accept: */*\r\n"+"Upgrade: websocket\r\n"+"Connection: Upgrade\r\n"+"Clientid: "+clientId+"\r\n"+"Connection: keep-alive\r\n"+ "Sec-WebSocket-Version: 13\r\n"+ "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n" +"\r\n"))
+		log.Println(webServer + ":Starting  listen-websocket upgrade")
+		conn, err := websocket.DialConfig(&slconfig)
 		if err != nil {
-			log.Println(proxyDomain+":Error write to serverlisten", err)
+			log.Println(webServer+":Error websocket-dail to serverListen", err)
+			return
 		}
-	
-		buf := bufio.NewReader(serverListen)			
-		success := false
+		defer conn.Close()
+		log.Println(webServer + ":Succed to listen-websocket upgrade")
 
-		timer2 := time.NewTimer(time.Second*30)    
-		go func() {        //等触发时的信号
-			for {
-				if success == true{
-			//		serverListen.Write([]byte{0x9})    // 0x9=ping (websocket keepalive frame)
-					serverListen.Write([]byte(" ")) 
-					log.Println(proxyDomain+":serverListen Keepalive...")
-				}
-				timer2 = time.NewTimer(time.Second*30)
-        		<-timer2.C
-			}
-    	}() 
+		_, err = conn.Write([]byte("Clientid: " + clientId + "\r\n"))
+		if err != nil {
+			log.Println(webServer+":Error write to serverlisten", err)
+		}
+		log.Println(webServer + ":Succed to send clientid by listen-websocket,entering io copy mode....")
 
-		for line, err := buf.ReadString('\n'); true; line, err = buf.ReadString('\n') {
-			log.Println(line)
-			if err != nil {
-				log.Println("error:", err)
-				log.Println(proxyDomain+":Failed to read following lines")
-				return
-			}
-
-			if line == "HTTP/1.1 101 Switching Protocols\r\n" {
-				success = true	
-			}
-
-			if success && line == "\r\n" {
-				break
-			}
+		_, err = io.Copy(clientConn, conn)
+		if err != nil {
+			log.Println(webServer+":Error copying data from websocket-server to client stream,error is ", err)
 		}
 
-		if success {
-			_, err = io.Copy(clientConn, buf)
-
-			if err != nil {
-				log.Println("error:", err)
-				log.Println("Error copying server to client stream", err)
-			}
-		} else {
-			log.Println("Failed to bind listen connection!")
-		}
-		timer2.Stop()
 		wait <- true
 
 	}()
 
 	go func() {
-		log.Println(proxyDomain+":starting to post websocket upgrade")
-
-		_, err =serverSend.Write([]byte("GET /transmit HTTP/1.1\r\n"+"Host: "+webServer+"\r\n"+"Accept: */*\r\n"+"Upgrade: websocket\r\n"+"Connection: Upgrade\r\n"+"Clientid: "+clientId+"\r\n"+"Connection: keep-alive\r\n"+ "Sec-WebSocket-Version: 13\r\n"+ "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n" +"\r\n"))
+		log.Println(webServer + ":starting send-websocket upgrade")
+		conn, err := websocket.DialConfig(&ssconfig)
 		if err != nil {
-			log.Println(proxyDomain+":Error write to serversend", err)
+			log.Println(webServer+":Error websocket-dail to serverSend", err)
+			return
 		}
-
-		buf := bufio.NewReader(serverSend)
-		success := false
-		
-		timer2 := time.NewTimer(time.Second*30)    
-		go func() {        //等触发时的信号
-			for {
-				if success == true{
-			//		serverSend.Write([]byte{0x9})
-					serverListen.Write([]byte(" ")) 
-					log.Println(proxyDomain+":serverSend Keepalive...")
-				}
-				timer2 = time.NewTimer(time.Second*30)
-        		<-timer2.C
-			}
-    	}() 
-		
-		for line, err := buf.ReadString('\n'); true; line, err = buf.ReadString('\n') {
-			log.Println(line)
-			if err != nil {
-				log.Println("error:", err)
-				log.Println(proxyDomain+":Failed to read following lines")
-				return
-			}
-
-			if line == "HTTP/1.1 101 Switching Protocols\r\n" {
-				success = true
-			}
-
-			if success && line == "\r\n" {
-				break
-			}
+		defer conn.Close()
+		log.Println(webServer + ":succed to send-websocket upgrade")
+		_, err = conn.Write([]byte("Clientid: " + clientId + "\r\n"))
+		if err != nil {
+			log.Println(webServer+":Error write to serverSend", err)
+			return
 		}
+		log.Println(webServer + ":succed to send clientid by send-websocket,entering io copy mode....")
 
-		if success {
-    
-			_, err = io.Copy(serverSend, clientConn)
-			if err != nil {
-				log.Println(proxyDomain+":Error copying client to server stream", err)
-			}
-		}else {
-			log.Println(proxyDomain+":Failed to bind send connection!")
+		_, err = io.Copy(conn, clientConn)
+		if err != nil {
+			log.Println(webServer+":Error copying data from clientConn to websocket-server,error is ", err)
 		}
-		timer2.Stop()
-		log.Println(proxyDomain+":session is over")
+		log.Println(webServer + ":session is over")
 		wait <- true
-	
 	}()
 
 	<-wait
@@ -230,7 +141,7 @@ func handleConnection(clientConn net.Conn,webServer string) {
 
 func main() {
 	log.Println("This program is designed by zhujq for ssh over http/https,starting...")
-	
+
 	webserv_port = make(map[string]string)
 
 	file, err := os.Open("./cf.json")
@@ -240,12 +151,12 @@ func main() {
 	}else {
 		buf := make([]byte, 1024)
 		len, _ := file.Read(buf)
-		
+
         if len == 0 {
 			log.Println("config file is empty,use default config")
             makedefaultcf()
         }else{
-			b := string(buf)	
+			b := string(buf)
 			var Servlist []Serv_port
 			err = json.Unmarshal([]byte(b[:len]), &Servlist)
         	if err != nil {
@@ -266,7 +177,7 @@ func main() {
 	for port := range webserv_port {
 
 		go func(bport string) {
-		
+
 			ln, err := net.Listen("tcp", ":"+bport)
 			if err != nil {
 				log.Println("Error listening!", err)
@@ -283,15 +194,15 @@ func main() {
 				}
 
 			go handleConnection(conn,webserv_port[bport])
-			
+
 			}
 
 			done <- true
-		
+
 		}(port)
-				
+
 	}
-	
+
 	<-done
 
 }

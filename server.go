@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
 	"golang.org/x/net/websocket"
 )
 
@@ -41,7 +40,7 @@ func bindServer(clientId string) {
 		if err != nil {
 			log.Println("Failed to connect to remote server :/", err)
 		}
-		log.Println("success to dial" + target)
+		log.Println("success to dial " + target)
 
 		defer serverConn.Close()
 
@@ -53,7 +52,6 @@ func bindServer(clientId string) {
 			if err != nil {
 				log.Println("Down Conn Disconnect:", err)
 			}
-
 			wait <- true
 		}()
 
@@ -62,7 +60,6 @@ func bindServer(clientId string) {
 			if err != nil {
 				log.Println("Up Conn Disconnect:", err)
 			}
-
 			wait <- true
 		}()
 
@@ -81,9 +78,8 @@ func lsHandler(w *websocket.Conn) {
 		websocket.Message.Receive(w, &message)
 		line := string(message)
 		if len(line) > 10 && (line[:10] == "Clientid: " || line[:10] == "clientid: ") {
-			log.Println("Found clientid!")
-			resolvedId = line[10:30]
-			log.Println(resolvedId)
+			resolvedId = line[10:]
+			log.Println("Found clientid:"+resolvedId)
 			break
 		}
 	}
@@ -116,9 +112,8 @@ func tsHandler(w *websocket.Conn) {
 		websocket.Message.Receive(w, &message)
 		line := string(message) //读取客户端发生的clientid
 		if len(line) > 10 && (line[:10] == "Clientid: " || line[:10] == "clientid: ") {
-			log.Println("Found clientid!")
-			resolvedId = line[10:30]
-			log.Println(resolvedId)
+			resolvedId = line[10:]
+			log.Println("Found clientid:"+resolvedId)
 			break
 		}
 	}
@@ -153,7 +148,7 @@ func defHandler(w *websocket.Conn) {
 			log.Println("接受消息失败", err)
 			break
 		}
-		msg := time.Now().String() + reply
+		msg := time.Now().Format("15:04:05") + reply
 		//log.Println(msg)
 		if err = websocket.Message.Send(w, msg); err != nil {
 			log.Println("发送消息失败")
