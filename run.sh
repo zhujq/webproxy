@@ -24,7 +24,5 @@ cp -f /config.json .
 chmod +x v2ray
 V2RAY_VMESS_AEAD_FORCED=false nohup ./v2ray run> /dev/null 2>&1 &
 cd /
-ifconfig -a
-echo "127.0.0.1 zeabur" >> /etc/hosts
 chmod +x server
 /server 
