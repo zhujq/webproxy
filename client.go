@@ -17,7 +17,6 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-
 var letters = []rune("abcdefghijklmnopqrstuvwyz1234567890")
 var keyGUID = []byte("258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
 
