@@ -10,7 +10,7 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-const port = "80"
+const port = "8888"
 const target = "127.0.0.1:22"
 const v2proxy = "127.0.0.1:8080"
 
